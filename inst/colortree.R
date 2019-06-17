@@ -90,7 +90,8 @@ read_color_nexus <- function(trefile){
   d <- tibble::tibble(node = 1:(length(tre2@phylo$tip.label)+N))
   d$name <- c(tre2@phylo$tip.label, rep("", N))
   d$branch_color <- c(branch_colormap[tre2@phylo$tip.label], tre2@phylo$node.label)
-  d$label_color <- c(label_colormap[tre2@phylo$tip.label], rep("", N))
+  d$branch_color <- ifelse(d$branch_color == "", "black", d$branch_color) 
+  d$label_color <- c(label_colormap[tre2@phylo$tip.label], rep("black", N))
 
   tre2@data <- d
 
@@ -107,7 +108,7 @@ read_color_nexus <- function(trefile){
 plot_color_nexus <- function(tre){
   # branch_color
   # label_color
-  ggtree::ggtree(tre) + ggtree::geom_tree(ggplot2::aes(color=branch_color)) 
+  ggtree::ggtree(tre) + ggtree::geom_tree(color=tre@data$branch_color) 
 }
 
 #' Export a plot to a PDF
