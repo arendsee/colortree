@@ -10,6 +10,12 @@ Description:
     Existing tree packages do not preserve color annotations. This package is
     intended to rememdy this problem. A better solution would be to modify an
     existing package, but I am short on time.
+Imports:
+    ggtree,
+    treeio,
+    tidytree,
+    stringr,
+    ape
 Encoding: UTF-8
 LazyData: true
 License: GPL-3

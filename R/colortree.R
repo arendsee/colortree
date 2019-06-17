@@ -2,6 +2,95 @@
 #'
 #' @param trefile path to a nexus file
 #' @export
+#' @examples
+#' tre <- system.file("examples", "H1_new.tre", package="colortree")
 read_color_nexus <- function(trefile){
-  # DO STUFF
+
+  # read in the tree file as a character vector
+  tre_str <- scan(file=trefile, what="", sep="\n", quiet=TRUE)
+
+  # Extract leaf node colors from the newick tree. These represent the color of
+  # the branches leading to the leaf.
+  # I currently handle only nexus files with a single tree, with the pattern:
+  #     tree tree_1 = [&R] <tree>
+  newick_tree <- tre_str[grep("tree tree_1", tre_str, perl=TRUE)]
+  newick_tree <- sub("^[^(]*", "", x=newick_tree, perl=TRUE)
+  leaf_branch_colors <- newick_tree %>%
+    # find all named nodes/tips in the newick tree that have meta data
+    stringr::str_extract_all("'[^']+'\\[[^\\]]+\\]") %>% '[['(1) %>%
+    # extract the node/tip name and the color field
+    stringr::str_replace("'([^']+)'\\[.*color=(#[0-9a-f]+).*\\]", "\\1\t\\2") %>%
+    # split the resulting list into a matrix where columns contain name and color
+    stringr::str_split_fixed("\t", n=2) %>%
+    tibble::as_tibble() %>%
+    magrittr::set_colnames(c("name", "branch_color"))
+
+  # extract the taxlabels column, this is not a very reliable method, I should
+  # extract the lines bound by the expressions '^\ttaxlabels' and '^;'.
+  taxlabels <- tre_str[stringr::str_detect(tre_str, "^\t'[^']+'")]
+
+  # Extract label colors from the taxlabels block.
+  leaf_label_colors <- taxlabels %>%
+    stringr::str_replace("^\t*'([^']+)'\\[.*color=(#[0-9a-f]+).*\\]$", "\\1\t\\2") %>%
+    # split the resulting list into a matrix where columns contain name and color
+    stringr::str_split_fixed("\t", n=2) %>%
+    tibble::as_tibble() %>%
+    magrittr::set_colnames(c("name", "label_color"))
+
+  leaf_colors <- merge(leaf_branch_colors, leaf_label_colors, by="name", all=TRUE)
+
+  tre_str <- gsub("'\\[[^\\]]+\\]", "'", tre_str, perl=TRUE)
+
+  # quote metadata
+  # tre_str <- gsub("(\\[[\\]]+\\])", "'\\1'", tre_str, perl=TRUE)
+  tre_str <- gsub("(\\[[^\\]]*\\])", "'\\1'", tre_str, perl=TRUE)
+
+  # Remove any repeated quotes that are produced.
+  # Single quotes occur if the node is named, for example:
+  #   'foo'[&label=0.5,!color=#ffffff] --> 'foo''[&label=0.5,!color=#ffffff]'
+  # Removing double quotes gives the desired form:
+  #   'foo[&label=0.5,!color=#ffffff]'
+  tre_str <- gsub("''", "", tre_str)
+
+  # Nexus format does not require that names be quoted.
+  # Unquoted names will be processed as follows:
+  #   foo[&label=0.5,!color=#ffffff] --> foo'[&label=0.5,!color=#ffffff]'
+  # This is not correct, we need to move the quote to include the name.  The
+  # expression below SHOULD work, though I am not sure what characters are
+  # legal in an unquoted name.
+  tre_str <- gsub("([a-zA-Z0-9_-]+)'\\[&", "'\\1[&", tre_str)
+
+  # The lines with the trees start with a little label, for example
+  #    tree tree_1 = [&R] ((('KX0884
+  # The expressions above quote the '[&R]', which is not what we want. I can
+  # fix this immediate problem by simply replacing it with the unquoted string:
+  tre_str <- gsub("'[&R]'", "[&R]", tre_str, fixed=TRUE)
+  # Though ultimately a more general solution will probably be needed.
+
+  # NOTE: currently I only support color, adding other node metadata is
+  # possible, but don't use '=', since that raises an error.
+  tre_str <- gsub("\\)'\\[&[^\\]]*color=#([0-9a-f]+)[^\\]]*\\]'", ")'#\\1'", x=tre_str, perl=TRUE)
+
+  new_trefile <- tempfile(pattern=basename(trefile), fileext=".tre")
+  write(tre_str, file=new_trefile)
+  cat("written to: ", new_trefile, "\n")
+
+  branch_colormap <- leaf_colors$branch_color
+  names(branch_colormap) <- leaf_colors$name
+  label_colormap <- leaf_colors$label_color
+  names(label_colormap) <- leaf_colors$name
+
+  tre2 <- treeio::as.treedata(ape::read.nexus(new_trefile))
+  tre2@phylo$tip.label <- gsub("'", "", tre2@phylo$tip.label)
+  tre2@phylo$node.label <- gsub("'", "", tre2@phylo$node.label)
+
+  N <- tre2@phylo$Nnode
+  d <- tibble::tibble(node = 1:(length(tre2@phylo$tip.label)+N))
+  d$name <- c(tre2@phylo$tip.label, rep("", N))
+  d$branch_color <- c(branch_colormap[tre2@phylo$tip.label], tre2@phylo$node.label)
+  d$label_color <- c(label_colormap[tre2@phylo$tip.label], rep("", N))
+
+  tre2@data <- d
+
+  tre2
 }

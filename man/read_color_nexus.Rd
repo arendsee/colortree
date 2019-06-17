@@ -12,3 +12,6 @@ read_color_nexus(trefile)
 \description{
 Read a nexus file with color annotations into a treedata object with a color column
 }
+\examples{
+tre <- system.file("examples", "H1_new.tre", package="colortree")
+}
