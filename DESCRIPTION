@@ -13,7 +13,6 @@ Description:
 Imports:
     ggtree,
     treeio,
-    tidytree,
     stringr,
     ape
 Encoding: UTF-8
