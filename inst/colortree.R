@@ -7,7 +7,6 @@
 #' @examples
 #' tre <- system.file("examples", "H1_new.tre", package="colortree")
 read_color_nexus <- function(trefile){
-
   # read in the tree file as a character vector
   tre_str <- scan(file=trefile, what="", sep="\n", quiet=TRUE)
 
@@ -96,6 +95,8 @@ read_color_nexus <- function(trefile){
 
   file.remove(new_trefile)
 
+  tre2@phylo <- tre2@phylo %>% reorder(.) %>% midpoint(.)
+  
   tre2
 }
 
@@ -130,7 +131,8 @@ export_color_nexus <- function(g, path, width=5, height=5, units="in", device="p
 #' @export
 nexus2pdf <- function(trefile){
   pdffile <- file.path(dirname(trefile), sub("\\.[^.]*$", ".pdf", basename(trefile)))
-  export_color_nexus(plot_color_nexus(read_color_nexus(trefile)), path=pdffile)
+  trefile %>% read_color_nexus(.) %>% plot_color_nexus(.) %>% export_color_nexus(., path=pdffile)
+  #export_color_nexus(plot_color_nexus(read_color_nexus(trefile)), path=pdffile)
 }
 
 args = commandArgs(trailingOnly=TRUE)
