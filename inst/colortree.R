@@ -82,6 +82,10 @@ read_color_nexus <- function(trefile){
   names(label_colormap) <- leaf_colors$name
 
   tre2 <- treeio::as.treedata(ape::read.nexus(new_trefile))
+  tre2@phylo <- tre2@phylo %>%
+    ape::reorder.phylo(.) %>%
+    phangorn::midpoint(., node.labels="label")
+
   tre2@phylo$tip.label <- gsub("'", "", tre2@phylo$tip.label)
   tre2@phylo$node.label <- gsub("'", "", tre2@phylo$node.label)
 
@@ -95,8 +99,6 @@ read_color_nexus <- function(trefile){
   tre2@data <- d
 
   file.remove(new_trefile)
-
-  tre2@phylo <- tre2@phylo %>% reorder(.) %>% midpoint(.)
   
   tre2
 }
