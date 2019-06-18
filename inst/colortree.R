@@ -29,7 +29,7 @@ export_color_nexus <- function(g, path, width=5, height=5, units="in", device="p
 #'
 #' @param trefile the path to a nexus file
 nexus2pdf <- function(trefile){
-  pdffile <- file.path(dirname(trefile), sub("\\.[^.]*$", ".pdf", basename(trefile)))
+  pdffile <- file.path(sub("\\.[^.]*$", ".pdf", basename(trefile)))
   trefile %>% colortree::read_color_nexus(.) %>%
     plot_color_nexus(.) %>%
     export_color_nexus(., path=pdffile)

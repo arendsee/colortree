@@ -122,7 +122,7 @@ read_color_nexus <- function(trefile){
   if("color" %in% names(node_metadata)){
     node_metadata <- dplyr::rename(node_metadata, branch_color = color)
   } else {
-    node_metadata$branch_color <- "#ffffff"
+    node_metadata$branch_color <- "#000000"
   }
   node_branch_color_map <- node_metadata$branch_color
   names(node_branch_color_map) <- node_metadata$node
@@ -140,8 +140,8 @@ read_color_nexus <- function(trefile){
   d <- tibble::tibble(node = 1:(L+N))
   d$name <- c(tre2@phylo$tip.label, rep("", N))
   d$branch_color <- c(branch_colormap[tre2@phylo$tip.label], node_branch_color_map[as.character((L+1):(L+N))])
-  d$branch_color <- ifelse(d$branch_color == "" | is.na(d$branch_color), "#ffffff", d$branch_color)
-  d$label_color <- c(label_colormap[tre2@phylo$tip.label], rep("#ffffff", N))
+  d$branch_color <- ifelse(d$branch_color == "" | is.na(d$branch_color), "#000000", d$branch_color)
+  d$label_color <- c(label_colormap[tre2@phylo$tip.label], rep("#000000", N))
 
   # Merge in the non-color node metadata fields
   d <- dplyr::left_join(d, node_metadata, by="node")
