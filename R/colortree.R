@@ -1,6 +1,10 @@
+#' @importFrom magrittr "%>%"
+utils::globalVariables(c("%>%", "%$%", "."))
+NULL
+
 #' colortree: Read colored nexus files and convert them to PDFs
 #'
-#' @docType pckage
+#' @docType package
 #' @name colortree
 NULL
 
@@ -184,6 +188,8 @@ default_export_color_nexus <- function(g, path, width=5, height=5, units="in", d
 #' @export
 default_nexus2pdf <- function(trefile){
   pdffile <- file.path(dirname(trefile), sub("\\.[^.]*$", ".pdf", basename(trefile)))
-  trefile %>% read_color_nexus(.) %>% plot_color_nexus(.) %>% export_color_nexus(., path=pdffile)
-  #export_color_nexus(plot_color_nexus(read_color_nexus(trefile)), path=pdffile)
+  trefile %>%
+    read_color_nexus %>%
+    default_plot_color_nexus %>%
+    default_export_color_nexus(path=pdffile)
 }

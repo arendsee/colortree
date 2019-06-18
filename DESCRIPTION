@@ -11,10 +11,17 @@ Description:
     intended to rememdy this problem. A better solution would be to modify an
     existing package, but I am short on time.
 Imports:
+    ape,
+    dplyr,
+    ggplot2,
     ggtree,
-    treeio,
+    magrittr,
+    phangorn,
+    reshape2,
     stringr,
-    ape
+    tibble,
+    tidyr,
+    treeio
 Encoding: UTF-8
 LazyData: true
 License: GPL-3
